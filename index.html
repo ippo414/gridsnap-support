@@ -217,6 +217,10 @@
   details[open] summary::after { content: "–"; }
   details p { margin-top: 12px; font-size: 14.5px; color: var(--gray); }
 
+  .policy { margin-top: 20px; }
+  .policy p { font-size: 14px; color: var(--gray); margin-top: 12px; }
+  .policy p strong { color: var(--ink); }
+
   footer { border-top: 1px solid var(--faint); padding: 48px 28px; }
   footer .wrap { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 18px; font-size: 13.5px; color: var(--gray); }
   footer nav { position: static; background: none; border: none; backdrop-filter: none; }
@@ -243,6 +247,8 @@
       <a href="#shortcuts">Shortcuts</a>
       <a href="#pricing">Pricing</a>
       <a href="#faq">FAQ</a>
+      <a href="#support">Support</a>
+      <a href="#privacy-policy">Privacy</a>
       <a class="pill" href="#pricing" id="appstore-link-nav">Get the app</a>
     </div>
   </div>
@@ -365,7 +371,7 @@
   <div class="wrap">
     <p class="eyebrow reveal">Privacy</p>
     <h2 class="reveal">Zero data collection. Really.</h2>
-    <p class="lead reveal">No analytics, no tracking, no network calls. Your settings, shortcuts, and saved layouts never leave your Mac. Read the <a href="https://github.com/ippo414/gridsnap-support/blob/main/PRIVACY.md" style="text-decoration: underline;">full privacy policy</a>.</p>
+    <p class="lead reveal">No analytics, no tracking, no network calls. Your settings, shortcuts, and saved layouts never leave your Mac. The <a href="#privacy-policy" style="text-decoration: underline;">full privacy policy</a> is right on this page.</p>
   </div>
 </section>
 
@@ -392,12 +398,70 @@
   </div>
 </section>
 
+<section id="support" class="rule">
+  <div class="wrap">
+    <p class="eyebrow reveal">Support</p>
+    <h2 class="reveal">Need a hand?</h2>
+    <p class="lead reveal">Bug reports, feature requests, and questions are all welcome. Every report is read by the developer.</p>
+    <div class="duo reveal">
+      <div class="panel">
+        <h3>Report an issue</h3>
+        <p style="margin-top: 18px; font-size: 14.5px; color: var(--gray);">Open a ticket on the GridSnap issue tracker — no account beyond a free GitHub login is needed:</p>
+        <p style="margin-top: 14px; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 13.5px; word-break: break-all;"><a href="https://github.com/ippo414/gridsnap-support/issues" style="text-decoration: underline;">github.com/ippo414/gridsnap-support/issues</a></p>
+      </div>
+      <div class="panel">
+        <h3>Before you write in</h3>
+        <ul>
+          <li>Check the FAQ above — permission issues cover most cases</li>
+          <li>Include your macOS version and what you expected to happen</li>
+          <li>Feature ideas are welcome too — this app grows from user requests</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="privacy-policy" class="rule">
+  <div class="wrap">
+    <p class="eyebrow reveal">Privacy Policy</p>
+    <h2 class="reveal">The full policy.</h2>
+    <p class="lead reveal">Last updated: July 8, 2026</p>
+
+    <div class="duo reveal" style="margin-top: 48px;">
+      <div class="panel">
+        <h3>English</h3>
+        <div class="policy">
+          <p><strong>GridSnap does not collect, store, or transmit any personal data.</strong></p>
+          <p><strong>No data collection.</strong> GridSnap contains no analytics, no tracking, no advertising identifiers, and no network communication of any kind.</p>
+          <p><strong>Local storage only.</strong> All settings, keyboard shortcuts, and saved window layouts are stored locally on your Mac and never leave your device.</p>
+          <p><strong>Accessibility permission.</strong> GridSnap uses macOS Accessibility APIs solely to move and resize windows at your request. No information obtained through these APIs is recorded or transmitted.</p>
+          <p><strong>Third parties.</strong> No data is shared with third parties, because no data is collected in the first place.</p>
+          <p><strong>Changes.</strong> If this policy ever changes, the updated version will be published on this page with a new date.</p>
+          <p><strong>Contact.</strong> Questions about this policy can be raised on the support tracker: github.com/ippo414/gridsnap-support/issues</p>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>日本語</h3>
+        <div class="policy">
+          <p><strong>GridSnapは、いかなる個人情報も収集・保存・送信しません。</strong></p>
+          <p><strong>データ収集なし。</strong>解析ツール、トラッキング、広告識別子、ネットワーク通信は一切ありません。</p>
+          <p><strong>ローカル保存のみ。</strong>設定、キーボードショートカット、保存済みウィンドウレイアウトはすべてお使いのMac内にのみ保存され、デバイスの外に送信されることはありません。</p>
+          <p><strong>アクセシビリティ権限。</strong>GridSnapは、ユーザーの操作に応じてウィンドウを移動・リサイズする目的でのみmacOSのAccessibility APIを使用します。このAPIを通じて取得した情報を記録・送信することはありません。</p>
+          <p><strong>第三者提供。</strong>そもそもデータを収集していないため、第三者への提供はありません。</p>
+          <p><strong>改定。</strong>本ポリシーを変更する場合は、日付を更新の上、本ページで公開します。</p>
+          <p><strong>お問い合わせ。</strong>本ポリシーに関するご質問はサポート窓口へ：github.com/ippo414/gridsnap-support/issues</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <footer>
   <div class="wrap">
     <div>© 2026 Kazuho Suzuki. All rights reserved.</div>
     <div class="fl">
-      <a href="https://github.com/ippo414/gridsnap-support/issues">Support</a>
-      <a href="https://github.com/ippo414/gridsnap-support/blob/main/PRIVACY.md">Privacy Policy</a>
+      <a href="#support">Support</a>
+      <a href="#privacy-policy">Privacy Policy</a>
     </div>
   </div>
 </footer>
