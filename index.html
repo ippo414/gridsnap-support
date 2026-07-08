@@ -1,267 +1,418 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GridSnap — macOS用グリッド式ウィンドウマネージャー</title>
-<meta name="description" content="カスタマイズ可能なグリッドオーバーレイで、ウィンドウを素早く正確に配置。macOS用ウィンドウマネージャー GridSnap。">
+<title>GridSnap — Snap windows to a grid. Instantly.</title>
+<meta name="description" content="GridSnap is a grid-based window manager for macOS. Double-tap Command, drag on the grid, done. $1.99 on the Mac App Store.">
 <link rel="icon" type="image/png" href="icon.png">
 <style>
   :root {
-    --bg: #0b0d12;
-    --bg-soft: #12151d;
-    --card: #171b26;
-    --line: rgba(255, 255, 255, 0.08);
-    --text: #eef1f7;
-    --muted: #9aa3b5;
-    --accent: #5b8cff;
-    --accent2: #8f6bff;
+    --paper: #fafaf8;
+    --ink: #111214;
+    --gray: #6f7278;
+    --faint: #e8e8e4;
+    --accent: #2f5cff;
+    --radius: 18px;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html { scroll-behavior: smooth; }
   body {
-    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Helvetica Neue", sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    line-height: 1.7;
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Inter, sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
   }
-  a { color: var(--accent); text-decoration: none; }
+  a { color: inherit; text-decoration: none; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 28px; }
 
-  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 24px; }
+  /* Nav */
+  nav {
+    position: sticky; top: 0; z-index: 10;
+    background: rgba(250, 250, 248, 0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--faint);
+  }
+  nav .wrap {
+    display: flex; align-items: center; justify-content: space-between;
+    height: 64px;
+  }
+  nav .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: -0.01em; }
+  nav .brand img { width: 26px; height: 26px; border-radius: 6px; }
+  nav .links { display: flex; align-items: center; gap: 28px; font-size: 14px; color: var(--gray); }
+  nav .links a:hover { color: var(--ink); }
+  .pill {
+    background: var(--ink); color: var(--paper);
+    padding: 9px 20px; border-radius: 99px;
+    font-size: 13.5px; font-weight: 600;
+    transition: opacity 0.15s;
+  }
+  .pill:hover { opacity: 0.8; color: var(--paper); }
 
   /* Hero */
-  .hero {
-    position: relative;
-    text-align: center;
-    padding: 96px 0 72px;
-  }
-  .hero::before {
-    content: "";
-    position: absolute; inset: 0;
-    background:
-      linear-gradient(var(--line) 1px, transparent 1px),
-      linear-gradient(90deg, var(--line) 1px, transparent 1px);
-    background-size: 72px 72px;
-    mask-image: radial-gradient(ellipse 70% 60% at 50% 35%, black 30%, transparent 75%);
-    -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 35%, black 30%, transparent 75%);
-    pointer-events: none;
-  }
-  .hero > * { position: relative; }
-  .hero img.icon {
-    width: 128px; height: 128px;
-    border-radius: 28px;
-    box-shadow: 0 24px 64px rgba(91, 140, 255, 0.35);
-    margin-bottom: 28px;
+  .hero { padding: 130px 0 90px; text-align: center; }
+  .hero .kicker {
+    font-size: 13px; font-weight: 600; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--gray);
   }
   .hero h1 {
-    font-size: clamp(40px, 7vw, 64px);
+    margin: 22px auto 0;
+    font-size: clamp(46px, 8.5vw, 96px);
+    line-height: 1.04;
     font-weight: 800;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.035em;
+    max-width: 13ch;
   }
-  .hero .tagline {
-    font-size: clamp(17px, 2.6vw, 22px);
-    color: var(--muted);
-    margin: 16px auto 0;
-    max-width: 560px;
+  .hero h1 em { font-style: normal; color: var(--accent); }
+  .hero .sub {
+    margin: 28px auto 0;
+    font-size: clamp(16px, 2.2vw, 19px);
+    color: var(--gray);
+    max-width: 46ch;
   }
-  .hero .tagline strong { color: var(--text); font-weight: 600; }
-  .cta {
-    display: inline-flex; align-items: center; gap: 10px;
-    margin-top: 36px;
-    padding: 14px 30px;
-    border-radius: 14px;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    color: #fff; font-weight: 700; font-size: 16px;
-    box-shadow: 0 12px 36px rgba(91, 140, 255, 0.35);
-    transition: transform 0.15s ease;
+  .hero .actions { margin-top: 44px; display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  .btn-primary {
+    display: inline-flex; align-items: baseline; gap: 10px;
+    background: var(--ink); color: var(--paper);
+    padding: 16px 34px; border-radius: 14px;
+    font-size: 16px; font-weight: 700;
+    transition: transform 0.15s, opacity 0.15s;
   }
-  .cta:hover { transform: translateY(-2px); }
-  .cta .sub { font-weight: 400; opacity: 0.85; font-size: 13px; }
-  .hero .note { margin-top: 14px; font-size: 13px; color: var(--muted); }
+  .btn-primary:hover { transform: translateY(-2px); opacity: 0.88; color: var(--paper); }
+  .btn-primary .price { font-weight: 400; font-size: 14px; opacity: 0.7; }
+  .hero .req { margin-top: 18px; font-size: 13px; color: var(--gray); }
 
-  /* Demo grid */
-  .demo {
-    margin: 64px auto 0;
-    max-width: 720px;
-    aspect-ratio: 16 / 10;
-    border-radius: 16px;
-    border: 1px solid var(--line);
-    background: var(--bg-soft);
-    padding: 10px;
+  /* Demo window */
+  .stage { padding: 30px 0 110px; }
+  .mac {
+    max-width: 780px; margin: 0 auto;
+    background: #fff;
+    border: 1px solid var(--faint);
+    border-radius: var(--radius);
+    box-shadow: 0 40px 90px rgba(17, 18, 20, 0.12);
+    overflow: hidden;
+  }
+  .mac .bar {
+    display: flex; align-items: center; gap: 7px;
+    padding: 13px 16px;
+    border-bottom: 1px solid var(--faint);
+  }
+  .mac .bar i { width: 11px; height: 11px; border-radius: 50%; display: block; }
+  .mac .bar i:nth-child(1) { background: #ff5f57; }
+  .mac .bar i:nth-child(2) { background: #febc2e; }
+  .mac .bar i:nth-child(3) { background: #28c840; }
+  .mac .grid {
+    aspect-ratio: 16 / 9.4;
     display: grid;
     grid-template-columns: repeat(6, 1fr);
     grid-template-rows: repeat(6, 1fr);
     gap: 6px;
-    box-shadow: 0 32px 80px rgba(0, 0, 0, 0.5);
+    padding: 12px;
+    background: #f4f4f1;
   }
-  .demo span {
-    border: 1px solid var(--line);
-    border-radius: 5px;
-    background: rgba(255, 255, 255, 0.02);
+  .mac .grid span { background: #fff; border: 1px solid var(--faint); border-radius: 5px; }
+  .mac .grid .sel {
+    background: var(--accent);
+    border-color: var(--accent);
+    opacity: 0.16;
+    animation: breathe 2.6s ease-in-out infinite;
   }
-  .demo .sel {
-    background: linear-gradient(135deg, rgba(91, 140, 255, 0.55), rgba(143, 107, 255, 0.55));
-    border-color: rgba(91, 140, 255, 0.9);
-    animation: pulse 2.4s ease-in-out infinite;
-  }
-  @keyframes pulse {
-    0%, 100% { opacity: 0.75; }
-    50% { opacity: 1; }
+  @keyframes breathe { 0%, 100% { opacity: 0.16; } 50% { opacity: 0.4; } }
+  .stage .caption { text-align: center; margin-top: 26px; font-size: 14px; color: var(--gray); }
+  .stage .caption kbd {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 12px;
+    border: 1px solid var(--faint); border-bottom-width: 2px;
+    border-radius: 6px; padding: 3px 8px; background: #fff;
   }
 
   /* Sections */
-  section { padding: 88px 0; }
-  section.alt { background: var(--bg-soft); }
+  section { padding: 100px 0; }
+  .rule { border-top: 1px solid var(--faint); }
+  .eyebrow {
+    font-size: 12.5px; font-weight: 700; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--accent);
+  }
   h2 {
-    text-align: center;
-    font-size: clamp(28px, 4.5vw, 38px);
+    margin-top: 14px;
+    font-size: clamp(30px, 4.6vw, 44px);
     font-weight: 800;
-    letter-spacing: -0.01em;
-    margin-bottom: 12px;
+    letter-spacing: -0.025em;
+    line-height: 1.12;
   }
-  .lead { text-align: center; color: var(--muted); max-width: 620px; margin: 0 auto 56px; }
+  .lead { margin-top: 16px; color: var(--gray); max-width: 54ch; }
 
-  .grid3 {
+  .features {
+    margin-top: 64px;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1px;
+    background: var(--faint);
+    border: 1px solid var(--faint);
+    border-radius: var(--radius);
+    overflow: hidden;
   }
-  .card {
-    background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: 16px;
-    padding: 28px;
+  .feature { background: var(--paper); padding: 36px 32px; }
+  .feature .num {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 12px; color: var(--gray);
   }
-  .card .emoji { font-size: 30px; }
-  .card h3 { font-size: 18px; margin: 14px 0 8px; }
-  .card p { color: var(--muted); font-size: 14.5px; }
+  .feature h3 { margin: 16px 0 8px; font-size: 18px; letter-spacing: -0.01em; }
+  .feature p { font-size: 14.5px; color: var(--gray); }
 
   /* Shortcuts */
-  .keys { max-width: 640px; margin: 0 auto; }
+  .keys { margin-top: 56px; max-width: 660px; }
   .keyrow {
-    display: flex; align-items: center; justify-content: space-between;
-    gap: 16px;
-    padding: 16px 20px;
-    border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: space-between; gap: 20px;
+    padding: 18px 4px;
+    border-bottom: 1px solid var(--faint);
+    font-size: 15.5px;
   }
-  .keyrow:last-child { border-bottom: none; }
-  .keyrow .desc { color: var(--muted); font-size: 15px; }
+  .keyrow:first-child { border-top: 1px solid var(--faint); }
   kbd {
     font-family: ui-monospace, "SF Mono", Menlo, monospace;
-    font-size: 13px;
-    background: var(--card);
-    border: 1px solid var(--line);
-    border-bottom-width: 2px;
+    font-size: 12.5px;
+    background: #fff;
+    border: 1px solid var(--faint); border-bottom-width: 2px;
     border-radius: 7px;
-    padding: 5px 10px;
+    padding: 5px 11px;
     white-space: nowrap;
+    color: var(--ink);
   }
 
-  /* Privacy strip */
-  .strip {
-    text-align: center;
-    padding: 56px 24px;
+  /* Specs & pricing */
+  .duo { margin-top: 56px; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+  .panel {
+    border: 1px solid var(--faint);
+    border-radius: var(--radius);
+    padding: 38px 34px;
+    background: #fff;
   }
-  .strip p { color: var(--muted); max-width: 560px; margin: 8px auto 0; }
+  .panel.dark { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .panel h3 { font-size: 14px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.6; }
+  .panel .big { font-size: 52px; font-weight: 800; letter-spacing: -0.03em; margin-top: 14px; }
+  .panel .big small { font-size: 16px; font-weight: 500; opacity: 0.6; letter-spacing: 0; }
+  .panel ul { list-style: none; margin-top: 22px; font-size: 14.5px; }
+  .panel ul li { padding: 7px 0; display: flex; gap: 10px; }
+  .panel ul li::before { content: "—"; opacity: 0.4; }
+  .panel.dark ul li { opacity: 0.9; }
+  .panel .cta-line { margin-top: 30px; }
 
-  footer {
-    border-top: 1px solid var(--line);
-    padding: 36px 24px;
-    text-align: center;
-    color: var(--muted);
-    font-size: 13.5px;
+  /* Privacy */
+  .privacy { text-align: center; }
+  .privacy h2 { max-width: 22ch; margin-left: auto; margin-right: auto; }
+  .privacy .lead { margin-left: auto; margin-right: auto; text-align: center; }
+
+  /* FAQ */
+  details {
+    border-bottom: 1px solid var(--faint);
+    padding: 20px 4px;
+    max-width: 660px;
   }
-  footer nav { margin-bottom: 12px; display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; }
+  details:first-of-type { border-top: 1px solid var(--faint); margin-top: 48px; }
+  summary { cursor: pointer; font-weight: 600; font-size: 15.5px; list-style: none; display: flex; justify-content: space-between; }
+  summary::after { content: "+"; color: var(--gray); }
+  details[open] summary::after { content: "–"; }
+  details p { margin-top: 12px; font-size: 14.5px; color: var(--gray); }
+
+  footer { border-top: 1px solid var(--faint); padding: 48px 28px; }
+  footer .wrap { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 18px; font-size: 13.5px; color: var(--gray); }
+  footer nav { position: static; background: none; border: none; backdrop-filter: none; }
+  footer .fl { display: flex; gap: 26px; }
+  footer a:hover { color: var(--ink); }
+
+  /* Reveal */
+  .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.7s ease, transform 0.7s ease; }
+  .reveal.in { opacity: 1; transform: none; }
+
+  @media (max-width: 640px) {
+    nav .links a:not(.pill) { display: none; }
+    .hero { padding: 90px 0 60px; }
+  }
 </style>
 </head>
 <body>
 
+<nav>
+  <div class="wrap">
+    <a class="brand" href="#"><img src="icon.png" alt="">GridSnap</a>
+    <div class="links">
+      <a href="#features">Features</a>
+      <a href="#shortcuts">Shortcuts</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#faq">FAQ</a>
+      <a class="pill" href="#pricing" id="appstore-link-nav">Get the app</a>
+    </div>
+  </div>
+</nav>
+
 <header class="hero">
   <div class="wrap">
-    <img class="icon" src="icon.png" alt="GridSnap アイコン" width="128" height="128">
-    <h1>GridSnap</h1>
-    <p class="tagline">Cmdをダブルタップ、ドラッグで選ぶ。<br><strong>ウィンドウ整列が、一瞬で終わる。</strong></p>
-    <a class="cta" href="#" id="appstore-link">Mac App Store で近日公開<span class="sub">$1.99</span></a>
-    <p class="note">macOS 14.0 (Sonoma) 以降対応</p>
-
-    <div class="demo" aria-hidden="true">
-      <span></span><span></span><span></span><span></span><span></span><span></span>
-      <span></span><span class="sel"></span><span class="sel"></span><span class="sel"></span><span></span><span></span>
-      <span></span><span class="sel"></span><span class="sel"></span><span class="sel"></span><span></span><span></span>
-      <span></span><span class="sel"></span><span class="sel"></span><span class="sel"></span><span></span><span></span>
-      <span></span><span></span><span></span><span></span><span></span><span></span>
-      <span></span><span></span><span></span><span></span><span></span><span></span>
+    <p class="kicker">Window manager for macOS</p>
+    <h1>Snap windows to a grid. <em>Instantly.</em></h1>
+    <p class="sub">Double-tap Command. Drag across the grid. Done. GridSnap turns window arranging — the chore you do fifty times a day — into a single gesture.</p>
+    <div class="actions">
+      <a class="btn-primary" href="#" id="appstore-link">Coming soon to the Mac App Store <span class="price">$1.99</span></a>
     </div>
+    <p class="req">Requires macOS 14.0 Sonoma or later · Apple Silicon &amp; Intel</p>
   </div>
 </header>
 
-<section>
+<div class="stage">
   <div class="wrap">
-    <h2>機能</h2>
-    <p class="lead">グリッドを表示して、置きたい場所をドラッグするだけ。細かいリサイズや位置合わせから解放されます。</p>
-    <div class="grid3">
-      <div class="card">
-        <div class="emoji">🔲</div>
-        <h3>グリッドオーバーレイ</h3>
-        <p>Cmdダブルタップでグリッドを表示。ドラッグでセル範囲を選ぶと、アクティブウィンドウがぴったり収まります。分割数はスクロールで1〜24までその場で変更可能。</p>
-      </div>
-      <div class="card">
-        <div class="emoji">🎯</div>
-        <h3>Window Pick Mode</h3>
-        <p>Cmdを押しながらドラッグすると、画面上の好きなウィンドウをクリックで選んで配置。アクティブでないウィンドウもそのまま動かせます。</p>
-      </div>
-      <div class="card">
-        <div class="emoji">⚡️</div>
-        <h3>クイックアクション</h3>
-        <p>左右半分・3分割・4隅・最大化・中央配置・モニター間移動。メニューバーとキーボードショートカットから一発実行。</p>
-      </div>
-      <div class="card">
-        <div class="emoji">💾</div>
-        <h3>レイアウト保存＆復元</h3>
-        <p>作業ごとのウィンドウ配置をワンクリックで保存。翌朝も、いつもの配置がすぐ戻ります。テンプレートによるルール定義にも対応。</p>
-      </div>
-      <div class="card">
-        <div class="emoji">🖥</div>
-        <h3>マルチモニター対応</h3>
-        <p>カーソルのあるスクリーンにグリッドを表示。モニター間の移動では相対的な位置とサイズを保ちます。</p>
-      </div>
-      <div class="card">
-        <div class="emoji">🪶</div>
-        <h3>軽量・メニューバー常駐</h3>
-        <p>Swift製のネイティブアプリ。メニューバーに静かに常駐し、Dockを占領しません。</p>
+    <div class="mac reveal">
+      <div class="bar"><i></i><i></i><i></i></div>
+      <div class="grid" aria-hidden="true">
+        <span></span><span></span><span></span><span></span><span></span><span></span>
+        <span></span><span class="sel"></span><span class="sel"></span><span class="sel"></span><span></span><span></span>
+        <span></span><span class="sel"></span><span class="sel"></span><span class="sel"></span><span></span><span></span>
+        <span></span><span class="sel"></span><span class="sel"></span><span class="sel"></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span><span></span><span></span>
       </div>
     </div>
+    <p class="caption">Double-tap <kbd>⌘</kbd> to summon the grid — scroll to reslice it from 1×1 up to 24×24.</p>
   </div>
-</section>
-
-<section class="alt">
-  <div class="wrap">
-    <h2>操作はこれだけ</h2>
-    <p class="lead">覚えるショートカットは、実質ひとつ。</p>
-    <div class="keys card">
-      <div class="keyrow"><span class="desc">グリッドの表示 / 非表示</span><kbd>⌘ ダブルタップ</kbd></div>
-      <div class="keyrow"><span class="desc">グリッド表示（代替）</span><kbd>⌃ ⌥ G</kbd></div>
-      <div class="keyrow"><span class="desc">ウィンドウを配置</span><kbd>ドラッグ</kbd></div>
-      <div class="keyrow"><span class="desc">任意のウィンドウを選んで配置</span><kbd>⌘ + ドラッグ</kbd></div>
-      <div class="keyrow"><span class="desc">カラム数 / 行数の変更</span><kbd>スクロール / ⇧ スクロール</kbd></div>
-      <div class="keyrow"><span class="desc">閉じる</span><kbd>esc</kbd></div>
-    </div>
-  </div>
-</section>
-
-<div class="strip">
-  <h2>🔒 データ収集ゼロ</h2>
-  <p>GridSnapに解析ツールやトラッキング、ネットワーク通信は一切ありません。設定もレイアウトも、すべてあなたのMacの中だけに保存されます。</p>
 </div>
 
+<section id="features" class="rule">
+  <div class="wrap">
+    <p class="eyebrow reveal">Features</p>
+    <h2 class="reveal">Everything you need.<br>Nothing you don't.</h2>
+    <p class="lead reveal">No cluttered preference panes, no learning curve. One gesture, a handful of thoughtful tools, and your screen falls into place.</p>
+    <div class="features reveal">
+      <div class="feature">
+        <span class="num">01</span>
+        <h3>Grid overlay</h3>
+        <p>Summon a grid over your screen and drag to select cells — the active window snaps precisely into that region. Scroll to change columns, Shift-scroll for rows, from 1 to 24 each way, with adjustable cell gaps.</p>
+      </div>
+      <div class="feature">
+        <span class="num">02</span>
+        <h3>Window Pick Mode</h3>
+        <p>Hold ⌘ while dragging to pick a region first, then click any window on screen — even one buried in the background — and it moves right into place.</p>
+      </div>
+      <div class="feature">
+        <span class="num">03</span>
+        <h3>Quick actions</h3>
+        <p>Halves, thirds, two-thirds, quarters, maximize, center, and next/previous display — all one keystroke or a click in the menu bar away.</p>
+      </div>
+      <div class="feature">
+        <span class="num">04</span>
+        <h3>Layouts</h3>
+        <p>Save your entire window arrangement and restore it anytime. Windows are matched by app and title, and template rules keep recurring setups automatic.</p>
+      </div>
+      <div class="feature">
+        <span class="num">05</span>
+        <h3>Multi-display</h3>
+        <p>The grid appears on whichever screen your cursor is on. Move windows between displays while keeping their relative size and position.</p>
+      </div>
+      <div class="feature">
+        <span class="num">06</span>
+        <h3>Native &amp; lightweight</h3>
+        <p>Built in Swift. Lives quietly in your menu bar, launches at login if you want it to, and stays out of your Dock.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="shortcuts" class="rule">
+  <div class="wrap">
+    <p class="eyebrow reveal">Shortcuts</p>
+    <h2 class="reveal">One gesture to learn.</h2>
+    <div class="keys reveal">
+      <div class="keyrow"><span>Show / hide the grid</span><kbd>⌘ double-tap</kbd></div>
+      <div class="keyrow"><span>Show the grid (alternative)</span><kbd>⌃ ⌥ G</kbd></div>
+      <div class="keyrow"><span>Snap the active window</span><kbd>drag</kbd></div>
+      <div class="keyrow"><span>Pick any window, then place it</span><kbd>⌘ + drag</kbd></div>
+      <div class="keyrow"><span>Change columns / rows</span><kbd>scroll / ⇧ scroll</kbd></div>
+      <div class="keyrow"><span>Dismiss</span><kbd>esc</kbd></div>
+    </div>
+  </div>
+</section>
+
+<section id="pricing" class="rule">
+  <div class="wrap">
+    <p class="eyebrow reveal">Pricing</p>
+    <h2 class="reveal">Pay once. Own it.</h2>
+    <div class="duo reveal">
+      <div class="panel dark">
+        <h3>GridSnap</h3>
+        <p class="big">$1.99 <small>one-time</small></p>
+        <ul>
+          <li>All features included</li>
+          <li>No subscription, no in-app purchases</li>
+          <li>No account required</li>
+          <li>Free updates</li>
+        </ul>
+        <p class="cta-line"><a class="pill" href="#" id="appstore-link-2">Coming soon to the Mac App Store</a></p>
+      </div>
+      <div class="panel">
+        <h3>Requirements</h3>
+        <ul>
+          <li>macOS 14.0 Sonoma or later</li>
+          <li>Apple Silicon &amp; Intel Macs</li>
+          <li>Accessibility permission — granted once in System Settings, it's how GridSnap moves your windows</li>
+          <li>About 3 MB on disk</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="rule privacy">
+  <div class="wrap">
+    <p class="eyebrow reveal">Privacy</p>
+    <h2 class="reveal">Zero data collection. Really.</h2>
+    <p class="lead reveal">No analytics, no tracking, no network calls. Your settings, shortcuts, and saved layouts never leave your Mac. Read the <a href="https://github.com/ippo414/gridsnap-support/blob/main/PRIVACY.md" style="text-decoration: underline;">full privacy policy</a>.</p>
+  </div>
+</section>
+
+<section id="faq" class="rule">
+  <div class="wrap">
+    <p class="eyebrow reveal">FAQ</p>
+    <h2 class="reveal">Questions, answered.</h2>
+    <details class="reveal">
+      <summary>Why does GridSnap need the Accessibility permission?</summary>
+      <p>macOS only lets an app move or resize other apps' windows through its Accessibility API. GridSnap uses it for exactly that — nothing is read, recorded, or transmitted. You grant it once in System Settings → Privacy &amp; Security → Accessibility.</p>
+    </details>
+    <details class="reveal">
+      <summary>My windows aren't moving. What should I check?</summary>
+      <p>Make sure GridSnap is enabled under System Settings → Privacy &amp; Security → Accessibility, then relaunch the app. If it still misbehaves, <a href="https://github.com/ippo414/gridsnap-support/issues" style="text-decoration: underline;">open an issue</a> and we'll take a look.</p>
+    </details>
+    <details class="reveal">
+      <summary>Does it work with multiple monitors?</summary>
+      <p>Yes. The grid follows your cursor to whichever display it's on, and dedicated actions move windows between displays while preserving their relative size and position.</p>
+    </details>
+    <details class="reveal">
+      <summary>Is there a subscription?</summary>
+      <p>No. GridSnap is a one-time purchase of $1.99 with every feature included.</p>
+    </details>
+  </div>
+</section>
+
 <footer>
-  <nav>
-    <a href="https://github.com/ippo414/gridsnap-support/issues">サポート / お問い合わせ</a>
-    <a href="https://github.com/ippo414/gridsnap-support/blob/main/PRIVACY.md">プライバシーポリシー</a>
-  </nav>
-  <div>Copyright © 2026 Kazuho Suzuki. All rights reserved.</div>
+  <div class="wrap">
+    <div>© 2026 Kazuho Suzuki. All rights reserved.</div>
+    <div class="fl">
+      <a href="https://github.com/ippo414/gridsnap-support/issues">Support</a>
+      <a href="https://github.com/ippo414/gridsnap-support/blob/main/PRIVACY.md">Privacy Policy</a>
+    </div>
+  </div>
 </footer>
+
+<script>
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((e) => {
+      if (e.isIntersecting) {
+        e.target.classList.add('in');
+        io.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.15 });
+  document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
+</script>
 
 </body>
 </html>
